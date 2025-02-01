@@ -90,9 +90,10 @@ function getWebviewContent() {
 					align-items: center;
 					gap: 8px;
 				}
+				
 				.media-button:hover {
 					background:rgb(142, 15, 127);
-					border-color: #64748b;
+					border-color:rgb(151, 160, 172);
 				}
 				
 				.chat-container {
@@ -157,12 +158,13 @@ function getWebviewContent() {
 						<input 
 							type="text" 
 							id="messageInput" 
-							placeholder="Type your message..."
-						>
+							placeholder="Type your message...">
 						<label class="media-button">
+						<input type="image" id="image-input" accept="image/*">
 							
-
-							<input type="image" id="image-input" accept="image/*">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7m4 0h6m0 0v6m0-6L12 12"/>
+								</svg>
 						</label>
 					</div>
 					<button id="sendButton">Send</button>
@@ -175,67 +177,100 @@ function getWebviewContent() {
 				const sendButton = document.getElementById('sendButton');
 				const fileInput = document.getElementById('fileInput');
 
-				function addMessage(content, isUser = false, imageUrl = null) {
-					const messageDiv = document.createElement('div');
-					messageDiv.className = \message \${isUser ? 'user-message' : 'bot-message'}\;
-					
-					if (imageUrl) {
-						const img = document.createElement('img');
-						img.src = imageUrl;
-						img.className = 'uploaded-image';
-						messageDiv.appendChild(img);
-					}
-					
-					if (content) {
-						const textDiv = document.createElement('div');
-						textDiv.textContent = content;
-						messageDiv.appendChild(textDiv);
-					}
-					
-					messagesContainer.appendChild(messageDiv);
-					messagesContainer.scrollTop = messagesContainer.scrollHeight;
-				}
+				const FlaskURL = 'placeholder' //placeholder will put link in 
 
-				function sendMessage() {
-					const message = messageInput.value.trim();
-					if (message) {
-						addMessage(message, true);
-						vscode.postMessage({
-							command: 'sendMessage',
-							text: message
-						});
-						messageInput.value = '';
-					}
-				}
 
-				fileInput.addEventListener('change', (e) => {
-					const file = e.target.files[0];
-					if (file) {
-						const reader = new FileReader();
-						reader.onload = (e) => {
-							const imageData = e.target.result;
-							addMessage('', true, imageData);
-							vscode.postMessage({
-								command: 'fileSelected',
-								data: imageData
-							});
-						};
-						reader.readAsDataURL(file);
-					}
-				});
-
-				sendButton.addEventListener('click', sendMessage);
-				messageInput.addEventListener('keypress', (e) => {
-					if (e.key === 'Enter') {
-						sendMessage();
-					}
-				});
-
-				// Add initial bot message
-				addMessage('Hello! How can I help you today?');
-			</script>
-		</body>
-		</html>`;
+				// Function to send text messages to Flask
+				const sendToFlask = async (endpoint, data) => {
+					try {
+						const response = await fetch(`;
+    $;
+    {
+        FLASK_API_URL;
+    }
+    /${endpoint}`, {;
+    method: 'POST',
+        headers;
+    {
+        'Content-Type';
+        'application/json',
+        ;
+    }
+    body: JSON.stringify(data);
 }
+;
+if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+}
+const result = await response.json();
+addMessage(result.response, false);
+vscode.postMessage({
+    command: 'success',
+    text: 'Message sent successfully'
+});
+try { }
+catch (error) {
+    // Error handling
+}
+const addMessage = (content, isUser = false, imageUrl = null) => {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = ;
+    message;
+    $;
+    {
+        isUser ? 'user-message' : 'bot-message';
+    }
+    ;
+    if (imageUrl) {
+        const img = document.createElement('img');
+        img.src = imageUrl;
+        img.className = 'uploaded-image';
+        messageDiv.appendChild(img);
+    }
+    if (content) {
+        const textDiv = document.createElement('div');
+        textDiv.textContent = content;
+        messageDiv.appendChild(textDiv);
+    }
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+};
+function sendMessage() {
+    const message = messageInput.value.trim();
+    if (message) {
+        addMessage(message, true);
+        vscode.postMessage({
+            command: 'sendMessage',
+            text: message
+        });
+        messageInput.value = '';
+    }
+}
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const imageData = e.target.result;
+            addMessage('', true, imageData);
+            vscode.postMessage({
+                command: 'fileSelected',
+                data: imageData
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+});
+sendButton.addEventListener('click', sendMessage);
+messageInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+// Add initial bot message
+addMessage('Hello! How can I help you today?');
+/script>
+    < /body>
+    < /html>`;
 function deactivate() { }
 //# sourceMappingURL=extension.js.map

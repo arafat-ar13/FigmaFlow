@@ -73,9 +73,10 @@ return /*html*/` <!DOCTYPE html>
 					align-items: center;
 					gap: 8px;
 				}
+				
 				.media-button:hover {
 					background:rgb(142, 15, 127);
-					border-color: #64748b;
+					border-color:rgb(151, 160, 172);
 				}
 				
 				.chat-container {
@@ -140,12 +141,13 @@ return /*html*/` <!DOCTYPE html>
 						<input 
 							type="text" 
 							id="messageInput" 
-							placeholder="Type your message..."
-						>
+							placeholder="Type your message...">
 						<label class="media-button">
+						<input type="image" id="image-input" accept="image/*">
 							
-
-							<input type="image" id="image-input" accept="image/*">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7m4 0h6m0 0v6m0-6L12 12"/>
+								</svg>
 						</label>
 					</div>
 					<button id="sendButton">Send</button>
@@ -158,7 +160,44 @@ return /*html*/` <!DOCTYPE html>
 				const sendButton = document.getElementById('sendButton');
 				const fileInput = document.getElementById('fileInput');
 
-				function addMessage(content, isUser = false, imageUrl = null) {
+				const FlaskURL = 'placeholder' //placeholder will put link in 
+
+
+				// Function to send text messages to Flask
+				const sendToFlask = async (endpoint, data) => {
+					try {
+						const response = await fetch(`${FLASK_API_URL}/${endpoint}`, {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+							},
+							body: JSON.stringify(data)
+						});
+						
+						if (!response.ok) {
+							throw new Error(`HTTP error! status: ${response.status}`);
+						}
+						
+						const result = await response.json();
+						addMessage(result.response, false);
+						
+						vscode.postMessage({
+							command: 'success',
+							text: 'Message sent successfully'
+						});
+					} catch (error) {
+						// Error handling
+					}
+				}
+				
+
+				const addMessage = (
+					content, 
+					isUser = false, 
+					imageUrl = null
+					)
+					=> 
+					{
 					const messageDiv = document.createElement('div');
 					messageDiv.className = \message \${isUser ? 'user-message' : 'bot-message'}\;
 					
