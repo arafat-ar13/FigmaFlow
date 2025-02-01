@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
-import axios from 'axios'
+import axios from 'axios';
 import dotenv from 'dotenv';
 dotenv.config();
 
 interface Message {
 	message: string;
-	image: string;
+	image?: string;
 }
 
 let panel: vscode.WebviewPanel | undefined;
@@ -80,6 +80,9 @@ return /*html*/`<!DOCTYPE html>
 			padding: 8px 12px;
 			margin: 8px 0;
 			border-radius: 8px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
 		}
 		.user-message {
 			background: #e2e8f0;
@@ -115,6 +118,17 @@ return /*html*/`<!DOCTYPE html>
 		button:hover {
 			background: #1e293b;
 		}
+		.media-button {
+			cursor: pointer;
+			padding: 8px;
+			border: 1px solid #e2e8f0;
+			border-radius: 6px;
+			background: white;
+		}
+		.media-button:hover {
+			background: rgb(142, 15, 127);
+			border-color: rgb(151, 160, 172);
+		}
 	</style>
 </head>
 <body>
@@ -124,7 +138,10 @@ return /*html*/`<!DOCTYPE html>
 		<div class="input-container">
 			<div class="message-input-container">
 				<input type="text" id="messageInput" placeholder="Type your message...">
-				<input type="file" id="imageInput" accept="image/*" style="display: none;">
+				<label class="media-button">
+					<input type="file" id="imageInput" accept="image/*" style="display: none;">
+					📷 Upload Image
+				</label>
 			</div>
 			<button id="sendButton">Send</button>
 		</div>
@@ -137,7 +154,9 @@ return /*html*/`<!DOCTYPE html>
 		const sendButton = document.getElementById('sendButton');
 		const fileInput = document.getElementById('imageInput');
 
-		const FLASK_API_URL = "http://localhost:5000"; // Change this if needed
+		const FLASK_API_URL = "http://localhost:5000"; // Change if needed
+
+		let uploadedImage = null; // Store uploaded image data
 
 		// Function to send text messages to Flask
 		const sendToFlask = async (endpoint, data) => {
@@ -158,7 +177,7 @@ return /*html*/`<!DOCTYPE html>
 			}
 		};
 
-		// Function to handle sending image files to Flask
+		// Function to send images to Flask
 		const sendImageToFlask = async (imageFile) => {
 			try {
 				const formData = new FormData();
@@ -168,8 +187,11 @@ return /*html*/`<!DOCTYPE html>
 					headers: { 'Content-Type': 'multipart/form-data' }
 				});
 
-				// Add bot response
-				addMessage(response.data.response, false);
+				// Store the uploaded image
+				uploadedImage = imageFile;
+
+				// Display image preview
+				addMessage('[Image Uploaded]', true, URL.createObjectURL(imageFile));
 
 				vscode.postMessage({
 					command: 'success',
@@ -184,22 +206,32 @@ return /*html*/`<!DOCTYPE html>
 			}
 		};
 
-		// Function to add messages to chat window
-		const addMessage = (message, isUser = true) => {
+		// Function to add messages to chat
+		const addMessage = (message, isUser = true, imageUrl = null) => {
 			const messageDiv = document.createElement('div');
-			messageDiv.className = \`message \${isUser ? 'user-message' : 'bot-message'}\`
+			messageDiv.className = \`message \${isUser ? 'user-message' : 'bot-message'}\`;
 			messageDiv.textContent = message;
+
+			if (imageUrl) {
+				const img = document.createElement('img');
+				img.src = imageUrl;
+				img.style.maxWidth = "200px";
+				img.style.borderRadius = "6px";
+				messageDiv.appendChild(img);
+			}
+
 			messagesContainer.appendChild(messageDiv);
 			messagesContainer.scrollTop = messagesContainer.scrollHeight;
 		};
 
-		// Function to handle sending messages
+		// Handle message sending
 		function sendMessage() {
 			const message = messageInput.value.trim();
 			if (message) {
 				addMessage(message);
-				sendToFlask('/message', { message });
+				sendToFlask('/message', { message, image: uploadedImage ? uploadedImage.name : null });
 				messageInput.value = '';
+				uploadedImage = null;
 			}
 		}
 
@@ -210,7 +242,6 @@ return /*html*/`<!DOCTYPE html>
 				const reader = new FileReader();
 				reader.onload = (e) => {
 					const imageData = e.target.result;
-					addMessage('[Image Uploaded]', true);
 					vscode.postMessage({
 						command: 'fileSelected',
 						data: imageData
