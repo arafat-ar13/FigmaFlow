@@ -90,15 +90,15 @@ function getWebviewContent() {
     .messages { height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
     .message { padding: 8px 12px; margin: 8px 0; border-radius: 8px; display: flex; align-items: center; gap: 8px; }
     .user-message { background:rgb(31, 41, 54); margin-left: 20%; }
-    .bot-message { background: #f1f5f9; margin-right: 20%; }
+    .bot-message { background:rgb(75, 111, 146); margin-right: 20%; }
     .input-container { display: flex; gap: 8px; }
     .message-input-container { flex: 1; display: flex; gap: 8px; }
     /* The text input now serves as the prompt */
-    input { flex: 1; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; }
-    button { padding: 8px 16px; background: #0f172a; color: white; border: none; border-radius: 6px; cursor: pointer; }
-    button:hover { background: #1e293b; }
-    .media-button { cursor: pointer; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; }
-    .media-button:hover { background: rgb(142, 15, 127); border-color: rgb(151, 160, 172); }
+    input { flex: 1; padding: 8px 12px; border: 1px solidrgb(74, 115, 135); border-radius: 6px; }
+    button { padding: 8px 16px; background:rgb(100, 138, 227); color: white; border: none; border-radius: 6px; cursor: pointer; }
+    button:hover { background:rgb(148, 164, 191); }
+    .media-button { cursor: pointer; padding: 8px; border: 1px rgb(30, 36, 39); border-radius: 6px; background: white; }
+    .media-button:hover { background: rgb(45, 192, 101); border-color: rgb(151, 160, 172); }
   </style>
 </head>
 <body>
