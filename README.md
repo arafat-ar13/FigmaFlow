@@ -1,71 +1,14 @@
-# figma-flow README
+# FigmaFlow - Gen Code **just** from images!
 
-This is the README for your extension "figma-flow". After writing up a brief description, we recommend including the following sections.
+Being a backend web engineer, it is difficult to come up with good front-end design code. That's where Figma comes in - a powerful collaborative design tool that lets designers create user interfaces, prototypes, and mockups in a visual environment. Figma has become the industry standard for UI/UX design as it allows teams to design, prototype, and gather feedback all in one place, significantly cutting down on the back-and-forth between designers and developers. However, taking those beautiful Figma designs and turning them into actual code was traditionally a time-consuming process that required careful recreation of every component. Not anymore! FigmaFlow is a VS Code extension that can turn your Figma designs directly into code, dramatically speeding up development by eliminating the need to manually translate designs into HTML/CSS from scratch. This automation helps bridge the gap between design and development, letting engineers focus on implementing business logic rather than pixel-perfect UI recreation.
 
-## Features
+FigmaFlow is able to convert a given screenshot or image of a Figma design and use AI Vision technologies to process that image into actual, usable HTML and CSS code that is over 95% similar to the original image. Not only Figma, the extension is able to replicate any webpage design image that you can feed it.
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+## Tech Stack
 
-For example if there is an image subfolder under your extension project workspace:
+- VS Code API
+- Anthropic Claude Vision AI API
+- TypeScript
+- Flask
+- PythonAnywhere
 
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
