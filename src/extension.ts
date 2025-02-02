@@ -62,7 +62,7 @@ function getWebviewContent(): string {
     .chat-container { max-width: 800px; margin: 0 auto; }
     .messages { height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
     .message { padding: 8px 12px; margin: 8px 0; border-radius: 8px; display: flex; align-items: center; gap: 8px; }
-    .user-message { background: #e2e8f0; margin-left: 20%; }
+    .user-message { background:rgb(31, 41, 54); margin-left: 20%; }
     .bot-message { background: #f1f5f9; margin-right: 20%; }
     .input-container { display: flex; gap: 8px; }
     .message-input-container { flex: 1; display: flex; gap: 8px; }
@@ -114,8 +114,8 @@ function getWebviewContent(): string {
         formData.append('image', image);
         formData.append('code', code);
         formData.append('prompt', prompt);
-        try {
-          const response = await fetch('https://figmaflow.pythonanywhere.com/api/upload', {
+		        try {
+			const response = await fetch('https://figmaflow.pythonanywhere.com/api/upload', {
             method: 'POST',
             body: formData
           });
