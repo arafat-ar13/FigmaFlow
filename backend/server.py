@@ -62,7 +62,7 @@ def upload_image():
     
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        filepath = f"{UPLOAD_FOLDER}/{file.filename}"
 
         img_file = Image.open(file)
 
