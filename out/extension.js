@@ -61,7 +61,8 @@ function activate(context) {
             panel.webview.onDidReceiveMessage(message => {
                 switch (message.command) {
                     case 'updateEditorCode':
-                        updateActiveEditor(message.code);
+                        // Use the delayed update function
+                        updateActiveEditorWithDelay(message.code);
                         break;
                     default:
                         console.warn(`Unknown command: ${message.command}`);
@@ -76,24 +77,42 @@ function activate(context) {
     context.subscriptions.push(disposable);
 }
 function deactivate() { }
-// Update the active editor's contents with newCode.
-function updateActiveEditor(newCode) {
+/**
+ * Gradually updates the active editor with newCode, character-by-character,
+ * using a typewriter effect.
+ */
+function updateActiveEditorWithDelay(newCode) {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
         vscode.window.showErrorMessage('No active editor found to update.');
         return;
     }
     const document = editor.document;
-    const fullRange = new vscode.Range(document.positionAt(0), document.positionAt(document.getText().length));
+    // First, clear the document.
     editor.edit(editBuilder => {
-        editBuilder.replace(fullRange, newCode);
-    }).then(success => {
-        if (success) {
-            vscode.window.showInformationMessage('Editor updated with new code.');
-        }
-        else {
-            vscode.window.showErrorMessage('Failed to update editor.');
-        }
+        const fullRange = new vscode.Range(document.positionAt(0), document.positionAt(document.getText().length));
+        editBuilder.replace(fullRange, '');
+    }).then(() => {
+        let index = 0;
+        const interval = 0.4; // Delay in milliseconds between characters
+        // A helper function that inserts one character at a time.
+        const typeNextChar = () => {
+            if (index < newCode.length) {
+                // Get current text length to determine insertion position.
+                const currentText = editor.document.getText();
+                const position = editor.document.positionAt(currentText.length);
+                editor.edit(editBuilder => {
+                    editBuilder.insert(position, newCode.charAt(index));
+                }).then(() => {
+                    index++;
+                    setTimeout(typeNextChar, interval);
+                });
+            }
+            else {
+                vscode.window.showInformationMessage('Editor updated with new code.');
+            }
+        };
+        typeNextChar();
     });
 }
 function sendActiveEditorCode(panel) {
@@ -104,7 +123,7 @@ function sendActiveEditorCode(panel) {
 }
 function getWebviewContent() {
     // Note: in the webview content below, we add a postMessage call after receiving a successful response from the API.
-    return `<!DOCTYPE html>
+    return /*html*/ `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -207,10 +226,7 @@ function getWebviewContent() {
       const imageInput = document.getElementById('imageInput');
       const imageFile = imageInput.files[0];
 
-      if (!secretCode) {
-        addMessage('No code found in the active editor.', false);
-        return;
-      }
+      
       
       addMessage("Sending request...", true);
       
@@ -218,7 +234,7 @@ function getWebviewContent() {
         const response = await sendMessageToAPI(secretCode, prompt, imageFile);
         if (response && response.code) {
           addMessage(response.code, false);
-          // Send a message to the extension host to update the active editor
+          // Send a message to the extension host to update the active editor with a typewriter effect.
           vscode.postMessage({ command: 'updateEditorCode', code: response.code });
         } else {
           addMessage('Error: Could not get response from server', false);
