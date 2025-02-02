@@ -7,6 +7,10 @@ from PIL import Image
 app = Flask(__name__)
 CORS(app=app)
 
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(SCRIPT_DIR, 'uploads')
+
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
@@ -45,10 +49,8 @@ def process_data():
     # For now, let's just echo it back
     return jsonify({
         "status": "success",
-        "received_data": {
-            "code": code,
-            "prompt": prompt
-        }
+        "code": code,
+        "prompt": prompt
     })
 
 @app.route('/api/upload', methods=['POST'])
