@@ -24,9 +24,15 @@ export function activate(context: vscode.ExtensionContext) {
 
       panel.webview.html = getWebviewContent();
 
-      // Listen for messages from the webview (if needed)
+      // Listen for messages from the webview.
       panel.webview.onDidReceiveMessage(message => {
-        // Handle messages if necessary
+        switch (message.command) {
+          case 'updateEditorCode':
+            updateActiveEditor(message.code);
+            break;
+          default:
+            console.warn(`Unknown command: ${message.command}`);
+        }
       });
 
       sendActiveEditorCode(panel);
@@ -42,6 +48,29 @@ export function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {}
 
+// Update the active editor's contents with newCode.
+function updateActiveEditor(newCode: string) {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showErrorMessage('No active editor found to update.');
+    return;
+  }
+  const document = editor.document;
+  const fullRange = new vscode.Range(
+    document.positionAt(0),
+    document.positionAt(document.getText().length)
+  );
+  editor.edit(editBuilder => {
+    editBuilder.replace(fullRange, newCode);
+  }).then(success => {
+    if (success) {
+      vscode.window.showInformationMessage('Editor updated with new code.');
+    } else {
+      vscode.window.showErrorMessage('Failed to update editor.');
+    }
+  });
+}
+
 function sendActiveEditorCode(panel: vscode.WebviewPanel) {
   if (vscode.window.activeTextEditor) {
     const code = vscode.window.activeTextEditor.document.getText();
@@ -50,6 +79,7 @@ function sendActiveEditorCode(panel: vscode.WebviewPanel) {
 }
 
 function getWebviewContent(): string {
+  // Note: in the webview content below, we add a postMessage call after receiving a successful response from the API.
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -62,15 +92,14 @@ function getWebviewContent(): string {
     .chat-container { max-width: 800px; margin: 0 auto; }
     .messages { height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
     .message { padding: 8px 12px; margin: 8px 0; border-radius: 8px; display: flex; align-items: center; gap: 8px; }
-    .user-message { background:rgb(31, 41, 54); margin-left: 20%; }
-    .bot-message { background:rgb(75, 111, 146); margin-right: 20%; }
+    .user-message { background: rgb(31, 41, 54); margin-left: 20%; }
+    .bot-message { background: rgb(22, 40, 59); margin-right: 20%; }
     .input-container { display: flex; gap: 8px; }
     .message-input-container { flex: 1; display: flex; gap: 8px; }
-    /* The text input now serves as the prompt */
-    input { flex: 1; padding: 8px 12px; border: 1px solidrgb(74, 115, 135); border-radius: 6px; }
-    button { padding: 8px 16px; background:rgb(100, 138, 227); color: white; border: none; border-radius: 6px; cursor: pointer; }
-    button:hover { background:rgb(148, 164, 191); }
-    .media-button { cursor: pointer; padding: 8px; border: 1px rgb(30, 36, 39); border-radius: 6px; background: white; }
+    input { flex: 1; padding: 8px 12px; border: 1px solid rgb(74, 115, 135); border-radius: 6px; }
+    button { padding: 8px 16px; background: rgb(100, 138, 227); color: white; border: none; border-radius: 6px; cursor: pointer; }
+    button:hover { background: rgb(148, 164, 191); }
+    .media-button { cursor: pointer; padding: 8px; border: 1px solid rgb(30, 36, 39); border-radius: 6px; background: white; }
     .media-button:hover { background: rgb(45, 192, 101); border-color: rgb(151, 160, 172); }
   </style>
 </head>
@@ -79,7 +108,6 @@ function getWebviewContent(): string {
   <div class="chat-container">
     <div class="messages" id="messages"></div>
     <div class="input-container">
-      <!-- The input here is for the prompt only -->
       <div class="message-input-container">
         <input type="text" id="messageInput" placeholder="Type your prompt...">
         <label class="media-button">
@@ -107,15 +135,14 @@ function getWebviewContent(): string {
       }
     });
 
-    async function sendMessageToAPI(code, prompt, image, type) {
-      // If an image is provided, use multipart form data
+    async function sendMessageToAPI(code, prompt, image) {
       if (image) {
         const formData = new FormData();
         formData.append('image', image);
         formData.append('code', code);
         formData.append('prompt', prompt);
-		        try {
-			const response = await fetch('https://figmaflow.pythonanywhere.com/api/upload', {
+        try {
+          const response = await fetch('https://figmaflow.pythonanywhere.com/api/upload', {
             method: 'POST',
             body: formData
           });
@@ -126,7 +153,6 @@ function getWebviewContent(): string {
           return null;
         }
       } else {
-        // Otherwise, send a JSON payload
         try {
           const response = await fetch('https://figmaflow.pythonanywhere.com/api/process', {
             method: 'POST',
@@ -151,9 +177,7 @@ function getWebviewContent(): string {
     }
 
     async function handleSend() {
-      // Retrieve the prompt from the input (but do not display the secret code)
       const prompt = messageInput.value.trim();
-      // Clear the prompt field (optional)
       messageInput.value = '';
       
       const imageInput = document.getElementById('imageInput');
@@ -166,18 +190,19 @@ function getWebviewContent(): string {
       
       addMessage("Sending request...", true);
       
-      sendMessageToAPI(secretCode, prompt, imageFile, 'message')
-        .then(response => {
-          if (response) {
-            addMessage(response.code, false);
-          } else {
-            addMessage('Error: Could not get response from server', false);
-          }
-        })
-        .catch(error => {
-          console.error("Error sending request:", error);
-          addMessage('Error: Request failed', false);
-        });
+      try {
+        const response = await sendMessageToAPI(secretCode, prompt, imageFile);
+        if (response && response.code) {
+          addMessage(response.code, false);
+          // Send a message to the extension host to update the active editor
+          vscode.postMessage({ command: 'updateEditorCode', code: response.code });
+        } else {
+          addMessage('Error: Could not get response from server', false);
+        }
+      } catch (error) {
+        console.error("Error sending request:", error);
+        addMessage('Error: Request failed', false);
+      }
     }
 
     sendButton.addEventListener('click', handleSend);
