@@ -22,7 +22,7 @@
             "title": "Figma Flow"
         },
         {
-            "command": "figma-flow.replaceSelection",
+            "command": "figma-flow.start",
             "title": "Replace Selected Text with Figma Flow Code",
             "when": "editorHasSelection"
         }
@@ -30,14 +30,11 @@
     "menus": {
         "editor/context": [
             {
-                "command": "figma-flow.replaceSelection",
+                "command": "figma-flow.start",
                 "when": "editorHasSelection",
                 "group": "navigation"
-            },
-            {
-                "command": "figma-flow.start",
-                "group": "navigation"
             }
+          
         ]
     }
 },
