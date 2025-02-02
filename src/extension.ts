@@ -7,11 +7,12 @@ let panel: vscode.WebviewPanel | undefined;
 export function activate(context: vscode.ExtensionContext) {
   console.log('Congratulations, your extension "figma-flow" is now active!');
 
-  // Register the command that opens the webview panel.
   const disposable = vscode.commands.registerCommand('figma-flow.start', () => {
     // If the panel already exists, reveal it; otherwise, create a new one.
     if (panel) {
       panel.reveal(vscode.ViewColumn.One);
+      // Optionally update the code again when panel is revealed.
+      sendActiveEditorCode(panel);
     } else {
       panel = vscode.window.createWebviewPanel(
         'figmaFlowPanel', // Internal identifier for the panel
@@ -25,7 +26,14 @@ export function activate(context: vscode.ExtensionContext) {
 
       panel.webview.html = getWebviewContent();
 
-      // Reset the panel variable when the panel is closed.
+      // Send the active editor code to the webview once it's loaded.
+      panel.webview.onDidReceiveMessage(message => {
+        // (Handle any messages from the webview if needed)
+      });
+
+      sendActiveEditorCode(panel);
+
+      // Reset when the panel is closed
       panel.onDidDispose(() => {
         panel = undefined;
       });
@@ -36,6 +44,13 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {}
+
+function sendActiveEditorCode(panel: vscode.WebviewPanel) {
+  if (vscode.window.activeTextEditor) {
+    const code = vscode.window.activeTextEditor.document.getText();
+    panel.webview.postMessage({ command: 'setCode', code });
+  }
+}
 
 function getWebviewContent(): string {
   return `<!DOCTYPE html>
@@ -122,23 +137,33 @@ function getWebviewContent(): string {
   <div class="chat-container">
     <div class="messages" id="messages"></div>
     <div class="input-container">
+      <!-- We'll display the code from the active editor here -->
       <div class="message-input-container">
-        <input type="text" id="messageInput" placeholder="Type your message...">
-        <label class="media-button">
-          <input type="file" id="imageInput" accept="image/*" style="display: none;">
-          📷 Upload Image
-        </label>
+        <textarea id="codeDisplay" style="flex:1; height:150px;" placeholder="Code from active editor will appear here"></textarea>
       </div>
-      <button id="sendButton">Send</button>
+      <button id="sendButton">Send Code</button>
     </div>
   </div>
   <script>
     const vscode = acquireVsCodeApi();
-    const messageInput = document.getElementById('messageInput');
+    const codeDisplay = document.getElementById('codeDisplay');
     const sendButton = document.getElementById('sendButton');
     const messagesContainer = document.getElementById('messages');
+    
+    // Variable to hold the code from the active editor.
+    let codeFromEditor = "";
 
-    async function sendMessageToAPI(message, image, type) {
+    // Listen for messages from the extension host.
+    window.addEventListener('message', event => {
+      const message = event.data;
+      if(message.command === 'setCode'){
+        codeFromEditor = message.code;
+        // Display the code in the textarea for visual feedback.
+        codeDisplay.value = codeFromEditor;
+      }
+    });
+
+    async function sendMessageToAPI(code, image, type) {
       if (type === 'message') {
         try {
           const response = await fetch('https://figmaflow.pythonanywhere.com/api/process', {
@@ -146,7 +171,7 @@ function getWebviewContent(): string {
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ code: message, prompt: message })
+            body: JSON.stringify({ code: code, prompt: code })
           });
           if (!response.ok) throw new Error('Network response was not ok');
           return await response.json();
@@ -180,13 +205,13 @@ function getWebviewContent(): string {
     }
 
     async function handleSend() {
-      const message = messageInput.value.trim();
-      if (!message) return;
-      const imageInput = document.getElementById('imageInput');
-      const imageFile = imageInput.files[0];
-      addMessage(message, true);
-      messageInput.value = '';
-      sendMessageToAPI(message, imageFile, 'message')
+      // Use the stored code from the active editor.
+      if (!codeFromEditor) {
+        addMessage('No code received from the active editor.', false);
+        return;
+      }
+      addMessage(codeFromEditor, true);
+      sendMessageToAPI(codeFromEditor, null, 'message')
         .then(response => {
           if (response) {
             addMessage(response.code, false);
@@ -195,13 +220,12 @@ function getWebviewContent(): string {
           }
         })
         .catch(error => {
-          console.error("Error sending message:", error);
+          console.error("Error sending code:", error);
           addMessage('Error: Request failed', false);
         });
     }
 
     sendButton.addEventListener('click', handleSend);
-    messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(); });
   </script>
 </body>
 </html>`;
