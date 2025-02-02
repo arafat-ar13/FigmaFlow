@@ -49,7 +49,7 @@ function activate(context) {
             panel.reveal(vscode.ViewColumn.One);
         }
         else {
-            panel = vscode.window.createWebviewPanel('figmaFlow', 'Figma Flow', vscode.ViewColumn.Beside, {
+            panel = vscode.window.createWebviewPanel('helloWorld', 'Figma Flow', vscode.ViewColumn.Beside, {
                 enableScripts: true,
                 retainContextWhenHidden: true,
             });

@@ -15,7 +15,7 @@
     "commands": [
       {
         "command": "figma-flow.helloWorld",
-        "title": "Hello World"
+        "title": "Figma Flow"
       }
     ]
   },

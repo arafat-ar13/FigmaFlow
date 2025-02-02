@@ -1,6 +1,6 @@
 
 import * as vscode from 'vscode';
-import axios from 'axios';
+
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -14,12 +14,12 @@ let panel: vscode.WebviewPanel | undefined;
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "figma-flow" is now active!');
 
-	const disposable = vscode.commands.registerCommand('figma-flow.figmaFlow', () => {
+	const disposable = vscode.commands.registerCommand('figma-flow.helloWorld', () => {
 		if (panel) {
 			panel.reveal(vscode.ViewColumn.One);
 		} else {
 			panel = vscode.window.createWebviewPanel(
-				'figmaFlow',
+				'helloWorld',
 				'Figma Flow',
 				vscode.ViewColumn.Beside,
 				{
