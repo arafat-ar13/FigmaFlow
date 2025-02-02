@@ -10,7 +10,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:figma-flow.start"
+
   ],
   "main": "./out/extension.js",
   "extensionKind": [

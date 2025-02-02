@@ -94,7 +94,7 @@ function updateActiveEditorWithDelay(newCode) {
         editBuilder.replace(fullRange, '');
     }).then(() => {
         let index = 0;
-        const interval = 0.4; // Delay in milliseconds between characters
+        const interval = 0.05; // Delay in milliseconds between characters
         // A helper function that inserts one character at a time.
         const typeNextChar = () => {
             if (index < newCode.length) {
