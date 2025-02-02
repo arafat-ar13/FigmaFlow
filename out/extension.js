@@ -44,12 +44,12 @@ dotenv_1.default.config();
 let panel;
 function activate(context) {
     console.log('Congratulations, your extension "figma-flow" is now active!');
-    const disposable = vscode.commands.registerCommand('figma-flow.helloWorld', () => {
+    const disposable = vscode.commands.registerCommand('figma-flow.start', () => {
         if (panel) {
             panel.reveal(vscode.ViewColumn.One);
         }
         else {
-            panel = vscode.window.createWebviewPanel('helloWorld', 'Figma Flow', vscode.ViewColumn.Beside, {
+            panel = vscode.window.createWebviewPanel('start', 'Figma Flow', vscode.ViewColumn.Beside, {
                 enableScripts: true,
                 retainContextWhenHidden: true,
             });

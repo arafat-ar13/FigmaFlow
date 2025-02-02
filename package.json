@@ -14,7 +14,7 @@
   "contributes": {
     "commands": [
       {
-        "command": "figma-flow.helloWorld",
+        "command": "figma-flow.start",
         "title": "Figma Flow"
       }
     ]
