@@ -52,7 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 function getWebviewContent() {
-return /*html*/`<!DOCTYPE html>
+	return /*html*/`<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
@@ -148,119 +148,117 @@ return /*html*/`<!DOCTYPE html>
 	</div>
 
 	<script>
-		const vscode = acquireVsCodeApi();
-		const messagesContainer = document.getElementById('messages');
 		const messageInput = document.getElementById('messageInput');
 		const sendButton = document.getElementById('sendButton');
-		const fileInput = document.getElementById('imageInput');
+		const messagesContainer = document.getElementById('messages');
 
-		const FLASK_API_URL = "http://localhost:5000"; // Change if needed
 
-		let uploadedImage = null; // Store uploaded image data
+async function sendMessageToAPI(message, image, type) {
+	if (type == 'message') {
+            try {
+                const response = await fetch('https://figmaflow.pythonanywhere.com/api/process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        code: message,
+                        prompt: message
+                    })
+                });
 
-		// Function to send text messages to Flask
-		const sendToFlask = async (endpoint, data) => {
-			try {
-				const response = await axios.post(FLASK_API_URL + endpoint, data, {
-					headers: { 'Content-Type': 'application/json' }
-				});
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
 
-				// Add bot response
-				addMessage(response.data.response, false);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error:', error);
+                return null;
+            }
+		}
+	
+	else {
+		// Send the image as multipart
+		const formData = new FormData();
+		formData.append('image', image);
 
-				vscode.postMessage({
-					command: 'success',
-					text: 'Message sent successfully'
-				});
-			} catch (error) {
-				console.error("Error sending message:", error);
-			}
-		};
+		try {
+			const response = await fetch('https://figmaflow.pythonanywhere.com/api/upload', {
+				method: 'POST',
+				body: formData
+			});
 
-		// Function to send images to Flask
-		const sendImageToFlask = async (imageFile) => {
-			try {
-				const formData = new FormData();
-				formData.append('file', imageFile);
+			if (!response.ok) {
+				throw new Error('Network response was not ok');
+			}	
 
-				const response = await axios.post(FLASK_API_URL + '/process', formData, {
-					headers: { 'Content-Type': 'multipart/form-data' }
-				});
+			const data = await response.json();
+			return data;
+		} catch (error) {
+			console.error('Error:', error);
+			return null;
+		}
+	}
+        }
 
-				// Store the uploaded image
-				uploadedImage = imageFile;
 
-				// Display image preview
-				addMessage('[Image Uploaded]', true, URL.createObjectURL(imageFile));
 
-				vscode.postMessage({
-					command: 'success',
-					text: 'Image uploaded successfully'
-				});
-			} catch (error) {
-				console.error('Error:', error);
-				vscode.postMessage({
-					command: 'error',
-					text: error.response?.data?.message || 'Failed to upload image'
-				});
-			}
-		};
 
-		// Function to add messages to chat
-		const addMessage = (message, isUser = true, imageUrl = null) => {
+		
+		function addMessage(text, isUser = true) {
 			const messageDiv = document.createElement('div');
 			messageDiv.className = \`message \${isUser ? 'user-message' : 'bot-message'}\`;
-			messageDiv.textContent = message;
-
-			if (imageUrl) {
-				const img = document.createElement('img');
-				img.src = imageUrl;
-				img.style.maxWidth = "200px";
-				img.style.borderRadius = "6px";
-				messageDiv.appendChild(img);
-			}
-
+			messageDiv.textContent = text;
 			messagesContainer.appendChild(messageDiv);
 			messagesContainer.scrollTop = messagesContainer.scrollHeight;
-		};
-
-		// Handle message sending
-		function sendMessage() {
-			const message = messageInput.value.trim();
-			if (message) {
-				addMessage(message);
-				sendToFlask('/message', { message, image: uploadedImage ? uploadedImage.name : null });
-				messageInput.value = '';
-				uploadedImage = null;
-			}
 		}
 
-		// Handle file upload
-		fileInput.addEventListener('change', (e) => {
-			const file = e.target.files[0];
-			if (file) {
-				const reader = new FileReader();
-				reader.onload = (e) => {
-					const imageData = e.target.result;
-					vscode.postMessage({
-						command: 'fileSelected',
-						data: imageData
-					});
-					sendImageToFlask(file);
-				};
-				reader.readAsDataURL(file);
-			}
-		});
+		async function handleSend() {
+				const message = messageInput.value.trim();
+				if (!message) return;
 
-		sendButton.addEventListener('click', sendMessage);
+				const imageInput = document.getElementById('imageInput');
+				const imageFile = imageInput.files[0];
+
+				// Add user message to chat
+				addMessage(message, true);
+				messageInput.value = '';
+
+				// Using .then() chains to handle the promise
+				sendMessageToAPI(message, imageFile, 'message')
+					.then(response => {
+						console.log('Full response:', response); // Debug log to inspect response
+						if (response ) {
+							addMessage(response.code, false);
+						} else {
+							console.log('Response structure:', response); // Debug log to see response structure
+							addMessage('Error: Could not get response from server', false);
+						}
+					})
+					.catch(error => {
+						console.error("Error sending message:", error);
+						addMessage('Error: Request failed', false);
+					});
+
+			}
+
+		
+
+
+			
+
+			
+		// Send message when clicking the send button
+		sendButton.addEventListener('click', handleSend);
+
+		// Send message when pressing Enter
 		messageInput.addEventListener('keypress', (e) => {
 			if (e.key === 'Enter') {
-				sendMessage();
+				handleSend();
 			}
 		});
-
-		// Add initial bot message
-		addMessage('Hello! How can I help you today?', false);
 	</script>
 </body>
 </html>`;
