@@ -9,16 +9,38 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+"activationEvents": [
+        "onCommand:figma-flow.figmaFlow",
+        "onCommand:figma-flow.replaceSelection",
+        "onEditorSelectionChange"
+    ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
-      {
-        "command": "figma-flow.start",
-        "title": "Figma Flow"
-      }
-    ]
-  },
+        {
+            "command": "figma-flow.start",
+            "title": "Figma Flow"
+        },
+        {
+            "command": "figma-flow.replaceSelection",
+            "title": "Replace Selected Text with Figma Flow Code",
+            "when": "editorHasSelection"
+        }
+    ],
+    "menus": {
+        "editor/context": [
+            {
+                "command": "figma-flow.replaceSelection",
+                "when": "editorHasSelection",
+                "group": "navigation"
+            },
+            {
+                "command": "figma-flow.start",
+                "group": "navigation"
+            }
+        ]
+    }
+},
   "scripts": {
     "vscode:prepublish": "yarn run compile",
     "compile": "tsc -p ./",
